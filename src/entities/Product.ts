@@ -5,7 +5,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from "typeorm";
+import { User } from "./User";
 
 @Entity()
 export class Product extends BaseEntity {
@@ -17,6 +19,12 @@ export class Product extends BaseEntity {
 
   @Column({ type: "decimal" })
   price!: number;
+
+  @Column()
+  creatorId!: number;
+
+  @ManyToOne(() => User, (user) => user.products)
+  creator: User;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -7,9 +7,10 @@ const apollo_server_1 = require("apollo-server");
 const schema_1 = require("./schema");
 const typeorm_config_1 = __importDefault(require("./typeorm.config"));
 const boot = async () => {
-    await typeorm_config_1.default.initialize();
+    const conn = await typeorm_config_1.default.initialize();
     const server = new apollo_server_1.ApolloServer({
         schema: schema_1.schema,
+        context: () => ({ conn }),
     });
     server.listen(5001).then(({ url }) => {
         console.log("listening on " + url);

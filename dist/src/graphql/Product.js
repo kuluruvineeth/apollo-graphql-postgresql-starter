@@ -2,31 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProductMutation = exports.ProductsQuery = exports.ProductType = void 0;
 const nexus_1 = require("nexus");
+const Product_1 = require("../entities/Product");
 exports.ProductType = (0, nexus_1.objectType)({
     name: "Product",
     definition(t) {
         t.nonNull.int("id"), t.nonNull.string("name"), t.nonNull.float("price");
     },
 });
-let products = [
-    {
-        id: 1,
-        name: "Product 1",
-        price: 15.99,
-    },
-    {
-        id: 2,
-        name: "Product 2",
-        price: 10.99,
-    },
-];
 exports.ProductsQuery = (0, nexus_1.extendType)({
     type: "Query",
     definition(t) {
         t.nonNull.list.nonNull.field("getAllProducts", {
             type: "Product",
-            resolve(_parent, _args, _context, _info) {
-                return products;
+            resolve(_parent, _args, context, _info) {
+                const { conn } = context;
+                return conn.query(`select * from product`);
             },
         });
     },
@@ -42,13 +32,7 @@ exports.CreateProductMutation = (0, nexus_1.extendType)({
             },
             resolve(_parent, args, _context, _info) {
                 const { name, price } = args;
-                const product = {
-                    id: products.length + 1,
-                    name,
-                    price,
-                };
-                products.push(product);
-                return product;
+                return Product_1.Product.create({ name, price }).save();
             },
         });
     },

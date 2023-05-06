@@ -1,6 +1,5 @@
 import { extendType, nonNull, objectType, stringArg } from "nexus";
 import { Context } from "../types/Context";
-import { ObjectType } from "typeorm";
 import argon2 from "argon2";
 import { User } from "../entities/User";
 import * as jwt from "jsonwebtoken";
@@ -19,6 +18,32 @@ export const AuthMutation = extendType({
   type: "Mutation",
 
   definition(t) {
+    t.nonNull.field("login", {
+      type: "AuthType",
+      args: {
+        username: nonNull(stringArg()),
+        password: nonNull(stringArg()),
+      },
+      async resolve(_parent, args, _context: Context, _info) {
+        const { username, password } = args;
+        const user = await User.findOne({ where: { username } });
+
+        if (!user) {
+          return new Error("User not found");
+        }
+
+        const isValid = await argon2.verify(user.password, password);
+        if (!isValid) {
+          throw new Error("Invalid creds.");
+        }
+        const token = jwt.sign(
+          { userId: user.id },
+          process.env.TOKEN_SECRET as jwt.Secret
+        );
+
+        return { token, user };
+      },
+    });
     t.nonNull.field("register", {
       type: "AuthType",
       args: {
